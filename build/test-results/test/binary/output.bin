@@ -1,0 +1,6 @@
+OPerson{id=20, firstName='John', lastName='Smith', dob=1980-11-15T15:15-06:00}
+Records affected: 1
+PPerson{id=21, firstName='Bobby', lastName='Smith', dob=1982-09-13T13:13-08:00}
+Records affected: 1
+OPerson{id=22, firstName='John', lastName='Smith', dob=1980-11-15T15:15-06:00}
+Records affected: 1

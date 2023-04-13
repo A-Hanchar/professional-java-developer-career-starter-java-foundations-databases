@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.artsiomhanchar.peopledb.repoasitory.PeopleRepositoryTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2023-04-13T14:00:56" hostname="TBSL-00509" time="0.056">
+<testsuite name="com.artsiomhanchar.peopledb.repoasitory.PeopleRepositoryTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2023-04-13T15:19:59" hostname="TBSL-00509" time="0.267">
   <properties/>
-  <testcase name="canSave()" classname="com.artsiomhanchar.peopledb.repoasitory.PeopleRepositoryTest" time="0.056"/>
-  <system-out><![CDATA[]]></system-out>
+  <testcase name="canSaveTwoPersons()" classname="com.artsiomhanchar.peopledb.repoasitory.PeopleRepositoryTest" time="0.248"/>
+  <testcase name="canSaveOnePerson()" classname="com.artsiomhanchar.peopledb.repoasitory.PeopleRepositoryTest" time="0.018"/>
+  <system-out><![CDATA[Person{id=20, firstName='John', lastName='Smith', dob=1980-11-15T15:15-06:00}
+Records affected: 1
+Person{id=21, firstName='Bobby', lastName='Smith', dob=1982-09-13T13:13-08:00}
+Records affected: 1
+Person{id=22, firstName='John', lastName='Smith', dob=1980-11-15T15:15-06:00}
+Records affected: 1
+]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>
