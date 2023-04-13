@@ -3,16 +3,20 @@ package com.artsiomhanchar.peopledb.repository;
 import com.artsiomhanchar.peopledb.exeption.UnableToSaveException;
 import com.artsiomhanchar.peopledb.model.Person;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class PeopleRepository {
     public static final String SAVE_PERSON_SQL = "INSERT INTO PEOPLE (FIRST_NAME, LAST_NAME, DOB) VALUES(?, ?, ?)";
-    public static final String FIND_BY_ID_SQL = "SELECT ID, FIRST_NAME, LAST_NAME, DOB FROM PEOPLE WHERE ID=?";
+    public static final String FIND_BY_ID_SQL = "SELECT ID, FIRST_NAME, LAST_NAME, DOB, SALARY FROM PEOPLE WHERE ID=?";
+    public static final String FIND_ALL_SQL = "SELECT ID, FIRST_NAME, LAST_NAME, DOB, SALARY FROM PEOPLE";
 
     private Connection connection;
 
@@ -31,7 +35,7 @@ public class PeopleRepository {
 
             ps.setString(1, person.getFirstName());
             ps.setString(2, person.getLastName());
-            ps.setTimestamp(3, Timestamp.valueOf(person.getDob().withZoneSameInstant(ZoneId.of("+0")).toLocalDateTime()));
+            ps.setTimestamp(3, convertDobToTimestamp(person.getDob()));
 
             int recordsAffected = ps.executeUpdate();
             ResultSet rs = ps.getGeneratedKeys();
@@ -63,19 +67,41 @@ public class PeopleRepository {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                long personId = rs.getLong("ID");
-                String firstName = rs.getString("FIRST_NAME");
-                String lastName = rs.getString("LAST_NAME");
-                ZonedDateTime dob = ZonedDateTime.of(rs.getTimestamp("DOB").toLocalDateTime(), ZoneId.of("+0"));
-
-                person = new Person(firstName, lastName, dob);
-                person.setId(personId);
+                person = extractPersonFromResultSet(rs);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
 
         return Optional.ofNullable(person);
+    }
+
+    public List<Person> findAllPersons() {
+        List<Person> people = new ArrayList<>();
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(FIND_ALL_SQL);
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                people.add(extractPersonFromResultSet(rs));
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return people;
+    }
+
+    private Person extractPersonFromResultSet(ResultSet rs) throws SQLException {
+        long personId = rs.getLong("ID");
+        String firstName = rs.getString("FIRST_NAME");
+        String lastName = rs.getString("LAST_NAME");
+        ZonedDateTime dob = ZonedDateTime.of(rs.getTimestamp("DOB").toLocalDateTime(), ZoneId.of("+0"));
+        BigDecimal salary = rs.getBigDecimal("SALARY");
+
+        return new Person(personId, firstName, lastName, dob, salary);
     }
 
     public long count() {
@@ -131,5 +157,25 @@ public class PeopleRepository {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void update(Person person) {
+        try {
+            PreparedStatement ps = connection.prepareStatement("UPDATE PEOPLE SET FIRST_NAME=?, LAST_NAME=?, DOB=?, SALARY=? WHERE ID=?");
+
+            ps.setString(1, person.getFirstName());
+            ps.setString(2, person.getLastName());
+            ps.setTimestamp(3, convertDobToTimestamp(person.getDob()));
+            ps.setBigDecimal(4, person.getSalary());
+            ps.setLong(5, person.getId());
+
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static Timestamp convertDobToTimestamp(ZonedDateTime dob) {
+        return Timestamp.valueOf(dob.withZoneSameInstant(ZoneId.of("+0")).toLocalDateTime());
     }
 }

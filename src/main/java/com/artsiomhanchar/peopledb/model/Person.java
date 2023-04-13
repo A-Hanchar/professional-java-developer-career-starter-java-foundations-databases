@@ -1,5 +1,6 @@
 package com.artsiomhanchar.peopledb.model;
 
+import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Objects;
@@ -7,15 +8,19 @@ import java.util.Objects;
 public class Person {
     private Long id;
 
-    public String firstName;
-    public String lastName;
-    public ZonedDateTime dob;
+    private String firstName;
+    private String lastName;
+    private ZonedDateTime dob;
+    private BigDecimal salary = new BigDecimal("0");
 
     public Person(Long id, String firstName, String lastName, ZonedDateTime dob) {
+        this(firstName, lastName, dob);
         this.id = id;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.dob = dob;
+    }
+
+    public Person(long id, String firstName, String lastName, ZonedDateTime dob, BigDecimal salary) {
+        this(id, firstName, lastName, dob);
+        this.salary = salary;
     }
 
     public Person(String firstName, String lastName, ZonedDateTime dob) {
@@ -54,6 +59,14 @@ public class Person {
 
     public void setDob(ZonedDateTime dob) {
         this.dob = dob;
+    }
+
+    public BigDecimal getSalary() {
+        return salary;
+    }
+
+    public void setSalary(BigDecimal salary) {
+        this.salary = salary;
     }
 
     @Override
