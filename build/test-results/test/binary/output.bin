@@ -1,2 +1,8 @@
-LPerson{id=30, firstName='Test', lastName='Johnson', dob=2000-09-01T12:00Z}
+OPerson{id=31, firstName='John', lastName='Smith', dob=1980-11-15T15:15-06:00}
 Records affected: 1
+PPerson{id=32, firstName='Bobby', lastName='Smith', dob=1982-09-13T13:13-08:00}
+Records affected: 1
+LPerson{id=33, firstName='Test', lastName='Johnson', dob=2000-09-01T12:00Z}
+Records affected: 1
+OPerson{id=34, firstName='John', lastName='Smith', dob=1980-11-15T15:15-06:00}
+Records affected: 1

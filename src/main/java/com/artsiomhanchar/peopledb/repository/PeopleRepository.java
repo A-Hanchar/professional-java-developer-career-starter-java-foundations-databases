@@ -6,9 +6,12 @@ import com.artsiomhanchar.peopledb.model.Person;
 import java.sql.*;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Optional;
 
 public class PeopleRepository {
     public static final String SAVE_PERSON_SQL = "INSERT INTO PEOPLE (FIRST_NAME, LAST_NAME, DOB) VALUES(?, ?, ?)";
+    public static final String FIND_BY_ID_SQL = "SELECT ID, FIRST_NAME, LAST_NAME, DOB FROM PEOPLE WHERE ID=?";
+
     private Connection connection;
 
     public PeopleRepository(Connection connection) {
@@ -47,11 +50,11 @@ public class PeopleRepository {
         return person;
     }
 
-    public Person findPersonById(Long id) {
+    public Optional<Person> findPersonById(Long id) {
         Person person = null;
 
         try {
-            PreparedStatement ps = connection.prepareStatement("SELECT ID, FIRST_NAME, LAST_NAME, DOB FROM PEOPLE WHERE ID=?");
+            PreparedStatement ps = connection.prepareStatement(FIND_BY_ID_SQL);
 
             ps.setLong(1, id);
 
@@ -70,6 +73,6 @@ public class PeopleRepository {
             throw new RuntimeException(e);
         }
 
-        return person;
+        return Optional.ofNullable(person);
     }
 }
