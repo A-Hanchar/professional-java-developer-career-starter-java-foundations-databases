@@ -1,5 +1,6 @@
-package com.artsiomhanchar.peopledb.repoasitory;
+package com.artsiomhanchar.peopledb.repository;
 
+import com.artsiomhanchar.peopledb.exeption.UnableToSaveException;
 import com.artsiomhanchar.peopledb.model.Person;
 
 import java.sql.*;
@@ -13,7 +14,7 @@ public class PeopleRepository {
         this.connection = connection;
     }
 
-    public Person save(Person person) {
+    public Person save(Person person) throws UnableToSaveException {
 //        String sql = String.format(
 //                "INSERT INTO PEOPLE (FIRST_NAME, LAST_NAME, DOB) VALUES('%s', '%s', '%s')",
 //                person.getFirstName(), person.getLastName(), person.getDob()
@@ -38,7 +39,8 @@ public class PeopleRepository {
 
             System.out.printf("Records affected: %d%n", recordsAffected);
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            throw new UnableToSaveException("Tried to save person: " + person);
         }
 
         return person;

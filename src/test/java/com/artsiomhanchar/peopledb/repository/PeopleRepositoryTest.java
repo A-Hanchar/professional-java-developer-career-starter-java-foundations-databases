@@ -1,4 +1,4 @@
-package com.artsiomhanchar.peopledb.repoasitory;
+package com.artsiomhanchar.peopledb.repository;
 
 import com.artsiomhanchar.peopledb.model.Person;
 import org.junit.jupiter.api.AfterEach;
