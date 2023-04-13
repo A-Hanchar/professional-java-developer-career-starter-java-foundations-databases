@@ -11,6 +11,13 @@ public class Person {
     public String lastName;
     public ZonedDateTime dob;
 
+    public Person(Long id, String firstName, String lastName, ZonedDateTime dob) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.dob = dob;
+    }
+
     public Person(String firstName, String lastName, ZonedDateTime dob) {
         this.firstName = firstName;
         this.lastName = lastName;

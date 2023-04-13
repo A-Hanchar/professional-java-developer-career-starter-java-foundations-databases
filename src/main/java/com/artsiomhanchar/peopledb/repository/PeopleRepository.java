@@ -6,7 +6,9 @@ import com.artsiomhanchar.peopledb.model.Person;
 import java.sql.*;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class PeopleRepository {
     public static final String SAVE_PERSON_SQL = "INSERT INTO PEOPLE (FIRST_NAME, LAST_NAME, DOB) VALUES(?, ?, ?)";
@@ -74,5 +76,60 @@ public class PeopleRepository {
         }
 
         return Optional.ofNullable(person);
+    }
+
+    public long count() {
+        long count = 0;
+
+        try {
+            PreparedStatement ps = connection.prepareStatement("SELECT COUNT(*) FROM PEOPLE");
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                count = rs.getLong(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return count;
+    }
+
+
+    public void delete(Person person) {
+        try {
+            PreparedStatement ps = connection.prepareStatement("DELETE FROM PEOPLE WHERE ID=?");
+
+            ps.setLong(1, person.getId());
+
+            int affectedRecordCount = ps.executeUpdate();
+
+            System.out.println(affectedRecordCount);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void delete(Person...people) { // Person[] people
+//        for(Person person : people) {
+//            delete(person);
+//        }
+
+        try {
+            Statement stmt = connection.createStatement();
+
+            String ids = Arrays.stream(people)
+                    .map(Person::getId)
+                    .map(String::valueOf) // 10L => "10"
+                    .collect(
+                            Collectors.joining(",")
+                    );
+
+            int affectedRecordCount = stmt.executeUpdate("DELETE FROM PEOPLE WHERE ID IN (:ids)".replace(":ids", ids));
+
+            System.out.println(affectedRecordCount);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
