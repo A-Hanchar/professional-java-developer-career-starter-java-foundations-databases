@@ -52,4 +52,16 @@ public class PeopleRepositoryTest {
 
         assertThat(savedPerson1.getId()).isNotEqualTo(savedPerson2.getId());
     }
+
+    @Test
+    public void canFindPersonById() {
+        Person test = new Person("Test", "Johnson", ZonedDateTime.of(2000, 9, 1, 12, 0, 0, 0, ZoneId.of("+0")));
+
+        Person savedPerson = repo.save(test);
+        Long savedPersonId = savedPerson.getId();
+
+        Person foundPerson = repo.findPersonById(savedPersonId);
+
+        assertThat(foundPerson).isEqualTo(savedPerson);
+    }
 }
