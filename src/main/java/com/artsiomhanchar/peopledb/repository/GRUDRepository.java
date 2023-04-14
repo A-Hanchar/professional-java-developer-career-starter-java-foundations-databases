@@ -1,5 +1,6 @@
 package com.artsiomhanchar.peopledb.repository;
 
+import com.artsiomhanchar.peopledb.annotation.Id;
 import com.artsiomhanchar.peopledb.annotation.MultiSQL;
 import com.artsiomhanchar.peopledb.annotation.SQL;
 import com.artsiomhanchar.peopledb.exeption.UnableToSaveException;
@@ -15,7 +16,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-abstract public class GRUDRepository<T extends Entity> {
+abstract public class GRUDRepository<T> {
 
     protected Connection connection;
 
@@ -57,7 +58,7 @@ abstract public class GRUDRepository<T extends Entity> {
             while (rs.next()) {
                 long id = rs.getLong(1);
 
-                entity.setId(id);
+                setIdByAnnotation(id, entity);
                 System.out.println(entity);
             }
 
@@ -129,7 +130,7 @@ abstract public class GRUDRepository<T extends Entity> {
         try {
             PreparedStatement ps = connection.prepareStatement(getSQLByAnnotation(CrudOperation.DELETE_ONE, this::getDeleteSQL));
 
-            ps.setLong(1, entity.getId());
+            ps.setLong(1, getIdByAnnotation(entity));
 
             int affectedRecordCount = ps.executeUpdate();
 
@@ -137,6 +138,46 @@ abstract public class GRUDRepository<T extends Entity> {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private Long getIdByAnnotation(T entity) {
+        return Arrays.stream(entity
+                .getClass()
+                .getDeclaredFields()
+        )
+                .filter(field -> field.isAnnotationPresent(Id.class))
+                .map(field -> {
+                    field.setAccessible(true);
+
+                    Long id= null;
+
+                    try {
+                        id = (long) field.get(entity);
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
+
+                    return id;
+                })
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("No ID annotated field found"));
+    }
+
+    private void setIdByAnnotation(Long id, T entity) {
+        Arrays.stream(entity
+                        .getClass()
+                        .getDeclaredFields()
+                )
+                .filter(field -> field.isAnnotationPresent(Id.class))
+                .forEach(field -> {
+                    field.setAccessible(true);
+
+                    try {
+                        field.set(entity, id);
+                    } catch (IllegalAccessException e) {
+                        throw new RuntimeException("Unable to set ID field value.");
+                    }
+                });
     }
 
     public void delete(T...entities) { // T[] entities
@@ -148,7 +189,8 @@ abstract public class GRUDRepository<T extends Entity> {
             Statement stmt = connection.createStatement();
 
             String ids = Arrays.stream(entities)
-                    .map(T::getId)
+//                    .map(entity -> findIdByAnnotation(entity))
+                    .map(this::getIdByAnnotation)
                     .map(String::valueOf) // 10L => "10"
                     .collect(
                             Collectors.joining(",")
@@ -167,7 +209,6 @@ abstract public class GRUDRepository<T extends Entity> {
             PreparedStatement ps = connection.prepareStatement(getSQLByAnnotation(CrudOperation.UPDATE, this::getUpdateSQL));
 
             mapForUpdate(entity, ps);
-
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
