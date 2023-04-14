@@ -5,7 +5,6 @@ import com.artsiomhanchar.peopledb.annotation.MultiSQL;
 import com.artsiomhanchar.peopledb.annotation.SQL;
 import com.artsiomhanchar.peopledb.exeption.UnableToSaveException;
 import com.artsiomhanchar.peopledb.model.CrudOperation;
-import com.artsiomhanchar.peopledb.model.Entity;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -16,11 +15,11 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-abstract public class GRUDRepository<T> {
+abstract public class GrudRepository<T> {
 
     protected Connection connection;
 
-    public GRUDRepository(Connection connection) {
+    public GrudRepository(Connection connection) {
         this.connection = connection;
     }
 

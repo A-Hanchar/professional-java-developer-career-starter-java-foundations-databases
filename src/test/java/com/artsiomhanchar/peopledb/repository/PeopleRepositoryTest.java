@@ -1,8 +1,11 @@
 package com.artsiomhanchar.peopledb.repository;
 
+import com.artsiomhanchar.peopledb.model.Address;
 import com.artsiomhanchar.peopledb.model.Person;
+import com.artsiomhanchar.peopledb.model.Region;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -59,6 +62,18 @@ public class PeopleRepositoryTest {
         Person savedPerson2 = repo.save(bobby);
 
         assertThat(savedPerson1.getId()).isNotEqualTo(savedPerson2.getId());
+    }
+
+    @Test
+    public void canSavePersonWithAddress() throws SQLException {
+        Person john = new Person("JohnZZZZ", "Smith", ZonedDateTime.of(1980, 11, 15, 15, 15, 00, 0, ZoneId.of("-6")));
+        Address address = new Address(null, "123 Beale St.", "Apt. 1A", "Wala Wala", "WA", "90210", "United States", "Fulton County", Region.WEST);
+
+        john.setHomeAddress(address);
+
+        Person savedPerson = repo.save(john);
+
+        assertThat(savedPerson.getHomeAddress().id()).isGreaterThan(0);
     }
 
     @Test
@@ -171,7 +186,9 @@ public class PeopleRepositoryTest {
         assertThat(p2.getSalary()).isNotEqualTo(p1.getSalary());
     }
 
+    // It's a good place for execute our code once
     @Test
+    @Disabled
     public void loadData() throws IOException, SQLException {
         Files
                 .lines(Path.of("C:\\Users\\ahanchar\\Desktop\\java\\Hr5m\\Hr5m.csv"))
