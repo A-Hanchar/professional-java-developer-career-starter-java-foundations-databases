@@ -89,7 +89,7 @@ public class PeopleRepositoryTest {
         repo.save(new Person("John7", "Smith", ZonedDateTime.of(1980, 11, 15, 15, 15, 0, 0, ZoneId.of("-6"))));
         repo.save(new Person("John8", "Smith", ZonedDateTime.of(1980, 11, 15, 15, 15, 0, 0, ZoneId.of("-6"))));
 
-        List<Person> people = repo.findAllPersons();
+        List<Person> people = repo.findAll();
         assertThat(people.size()).isGreaterThanOrEqualTo(10);
     }
 
