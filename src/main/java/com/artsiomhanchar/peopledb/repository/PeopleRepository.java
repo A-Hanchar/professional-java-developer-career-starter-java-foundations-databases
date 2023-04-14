@@ -1,6 +1,7 @@
 package com.artsiomhanchar.peopledb.repository;
 
 import com.artsiomhanchar.peopledb.annotation.SQL;
+import com.artsiomhanchar.peopledb.model.CrudOperation;
 import com.artsiomhanchar.peopledb.model.Person;
 
 import java.math.BigDecimal;
@@ -22,32 +23,7 @@ public class PeopleRepository extends GRUDRepository<Person> {
     }
 
     @Override
-    protected String getFindByIdSQL() {
-        return FIND_BY_ID_SQL;
-    }
-
-    @Override
-    protected String getFindAllSQL() {
-        return FIND_ALL_SQL;
-    }
-
-    @Override
-    protected String getCountSQL() {
-        return SELECT_COUNT_SQL;
-    }
-
-    @Override
-    protected String getDeleteSQL() {
-        return DELETE_SQL;
-    }
-
-    @Override
-    protected String getDeleteInSQL() {
-        return DELETE_IN_SQL;
-    }
-
-    @Override
-    @SQL(SAVE_PERSON_SQL)
+    @SQL(value = SAVE_PERSON_SQL, operationType = CrudOperation.SAVE)
     void mapForSave(Person person, PreparedStatement ps) throws SQLException {
         ps.setString(1, person.getFirstName());
         ps.setString(2, person.getLastName());
@@ -55,7 +31,7 @@ public class PeopleRepository extends GRUDRepository<Person> {
     }
 
     @Override
-    @SQL(UPDATE_SQL)
+    @SQL(value = UPDATE_SQL, operationType = CrudOperation.UPDATE)
     void mapForUpdate(Person person, PreparedStatement ps) throws SQLException {
         ps.setString(1, person.getFirstName());
         ps.setString(2, person.getLastName());
@@ -65,6 +41,11 @@ public class PeopleRepository extends GRUDRepository<Person> {
     }
 
     @Override
+    @SQL(value = FIND_BY_ID_SQL, operationType = CrudOperation.FIND_BY_ID)
+    @SQL(value = FIND_ALL_SQL, operationType = CrudOperation.FIND_ALL)
+    @SQL(value = SELECT_COUNT_SQL, operationType = CrudOperation.COUNT)
+    @SQL(value = DELETE_SQL, operationType = CrudOperation.DELETE_ONE)
+    @SQL(value = DELETE_IN_SQL, operationType = CrudOperation.DELETE_MANY)
     Person extractEntityFromResultSet(ResultSet rs) throws SQLException {
         long personId = rs.getLong("ID");
         String firstName = rs.getString("FIRST_NAME");

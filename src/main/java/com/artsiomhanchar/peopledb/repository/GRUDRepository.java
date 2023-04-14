@@ -1,7 +1,9 @@
 package com.artsiomhanchar.peopledb.repository;
 
+import com.artsiomhanchar.peopledb.annotation.MultiSQL;
 import com.artsiomhanchar.peopledb.annotation.SQL;
 import com.artsiomhanchar.peopledb.exeption.UnableToSaveException;
+import com.artsiomhanchar.peopledb.model.CrudOperation;
 import com.artsiomhanchar.peopledb.model.Entity;
 
 import java.sql.*;
@@ -11,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 abstract public class GRUDRepository<T extends Entity> {
 
@@ -20,10 +23,18 @@ abstract public class GRUDRepository<T extends Entity> {
         this.connection = connection;
     }
 
-    private String getSQLByAnnotation(String methodName, Supplier<String> sqlGetter) {
-        return Arrays.stream(this.getClass().getDeclaredMethods())
-                .filter(method -> methodName.equals(method.getName()))
-                .map(method -> method.getAnnotation(SQL.class))
+    private String getSQLByAnnotation(CrudOperation operationType, Supplier<String> sqlGetter) {
+        Stream<SQL> multiSQLStream = Arrays.stream(this.getClass().getDeclaredMethods())
+                .filter(method -> method.isAnnotationPresent(MultiSQL.class))
+                .map(method -> method.getAnnotation(MultiSQL.class))
+                .flatMap(multiSQL -> Arrays.stream(multiSQL.value()));
+
+        Stream<SQL> sqlStream = Arrays.stream(this.getClass().getDeclaredMethods())
+                .filter(method -> method.isAnnotationPresent(SQL.class))
+                .map(method -> method.getAnnotation(SQL.class));
+
+        return Stream.concat(multiSQLStream, sqlStream)
+                .filter(annotation -> annotation.operationType().equals(operationType))
                 .map(SQL::value)
                 .findFirst()
                 .orElseGet(sqlGetter);
@@ -36,7 +47,7 @@ abstract public class GRUDRepository<T extends Entity> {
 //        );
 
         try {
-            PreparedStatement ps = connection.prepareStatement(getSQLByAnnotation("mapForSave", this::getSaveSQL), Statement.RETURN_GENERATED_KEYS);
+            PreparedStatement ps = connection.prepareStatement(getSQLByAnnotation(CrudOperation.SAVE, this::getSaveSQL), Statement.RETURN_GENERATED_KEYS);
 
             mapForSave(entity, ps);
 
@@ -63,7 +74,7 @@ abstract public class GRUDRepository<T extends Entity> {
         T entity = null;
 
         try {
-            PreparedStatement ps = connection.prepareStatement(getFindByIdSQL());
+            PreparedStatement ps = connection.prepareStatement(getSQLByAnnotation(CrudOperation.FIND_BY_ID, this::getFindByIdSQL));
 
             ps.setLong(1, id);
 
@@ -83,7 +94,7 @@ abstract public class GRUDRepository<T extends Entity> {
         List<T> entities = new ArrayList<>();
 
         try {
-            PreparedStatement ps = connection.prepareStatement(getFindAllSQL());
+            PreparedStatement ps = connection.prepareStatement(getSQLByAnnotation(CrudOperation.FIND_ALL, this::getFindAllSQL));
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
@@ -101,7 +112,7 @@ abstract public class GRUDRepository<T extends Entity> {
         long count = 0;
 
         try {
-            PreparedStatement ps = connection.prepareStatement(getCountSQL());
+            PreparedStatement ps = connection.prepareStatement(getSQLByAnnotation(CrudOperation.COUNT, this::getCountSQL));
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
@@ -116,7 +127,7 @@ abstract public class GRUDRepository<T extends Entity> {
 
     public void delete(T entity) {
         try {
-            PreparedStatement ps = connection.prepareStatement(getDeleteSQL());
+            PreparedStatement ps = connection.prepareStatement(getSQLByAnnotation(CrudOperation.DELETE_ONE, this::getDeleteSQL));
 
             ps.setLong(1, entity.getId());
 
@@ -143,7 +154,7 @@ abstract public class GRUDRepository<T extends Entity> {
                             Collectors.joining(",")
                     );
 
-            int affectedRecordCount = stmt.executeUpdate(getDeleteInSQL().replace(":ids", ids));
+            int affectedRecordCount = stmt.executeUpdate(getSQLByAnnotation(CrudOperation.DELETE_MANY, this::getDeleteInSQL).replace(":ids", ids));
 
             System.out.println(affectedRecordCount);
         } catch (SQLException e) {
@@ -153,7 +164,7 @@ abstract public class GRUDRepository<T extends Entity> {
 
     public void update(T entity) {
         try {
-            PreparedStatement ps = connection.prepareStatement(getSQLByAnnotation("mapForUpdate", this::getUpdateSQL));
+            PreparedStatement ps = connection.prepareStatement(getSQLByAnnotation(CrudOperation.UPDATE, this::getUpdateSQL));
 
             mapForUpdate(entity, ps);
 
@@ -164,10 +175,12 @@ abstract public class GRUDRepository<T extends Entity> {
     }
 
     protected String getUpdateSQL() {
-        return "";
+        throw new RuntimeException("SQL not defined");
     };
 
-    protected abstract String getDeleteSQL();
+    protected String getDeleteSQL(){
+        throw new RuntimeException("SQL not defined");
+    };
 
     /**
      *
@@ -175,13 +188,17 @@ abstract public class GRUDRepository<T extends Entity> {
      * "DELETE FROM PEOPLE WHERE ID IN (:ids)"
      * Be sure to include the '(:ids)' named parameter & call it 'ids'
      */
-    protected abstract String getDeleteInSQL();
+    protected String getDeleteInSQL(){
+        throw new RuntimeException("SQL not defined");
+    };
 
-    protected abstract String getCountSQL();
+    protected String getCountSQL(){
+        throw new RuntimeException("SQL not defined");
+    };
 
-    protected abstract String getFindAllSQL();
-
-    abstract T extractEntityFromResultSet(ResultSet rs) throws SQLException;
+    protected String getFindAllSQL(){
+        throw new RuntimeException("SQL not defined");
+    };
 
     /**
      *
@@ -189,13 +206,17 @@ abstract public class GRUDRepository<T extends Entity> {
      * The SQL must contain one SQL parameter, i.e. "?", thaw will bind to the
      * entity's ID.
      */
-    protected abstract String getFindByIdSQL();
+    protected String getFindByIdSQL() {
+        throw new RuntimeException("SQL not defined");
+    };
+
+    String getSaveSQL() {
+        throw new RuntimeException("SQL not defined");
+    };
+
+    abstract T extractEntityFromResultSet(ResultSet rs) throws SQLException;
 
     abstract void mapForSave(T entity, PreparedStatement ps) throws SQLException;
 
     abstract void mapForUpdate(T entity, PreparedStatement ps) throws SQLException;
-
-    String getSaveSQL() {
-        return "";
-    };
 }
