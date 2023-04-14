@@ -65,14 +65,14 @@ public class PeopleRepositoryTest {
         Person savedPerson = repo.save(test);
         Long savedPersonId = savedPerson.getId();
 
-        Person foundPerson = repo.findPersonById(savedPersonId).get();
+        Person foundPerson = repo.findById(savedPersonId).get();
 
         assertThat(foundPerson).isEqualTo(savedPerson);
     }
 
     @Test
     public void testPersonIdNotFound() {
-        Optional<Person> foundPerson = repo.findPersonById(-1L);
+        Optional<Person> foundPerson = repo.findById(-1L);
 
         assertThat(foundPerson).isEmpty();
     }
@@ -158,12 +158,12 @@ public class PeopleRepositoryTest {
     public void canUpdate() {
         Person savedPerson = repo.save(new Person("John", "Smith", ZonedDateTime.of(1980, 11, 15, 15, 15, 0, 0, ZoneId.of("-6"))));
 
-        Person p1 = repo.findPersonById(savedPerson.getId()).get();
+        Person p1 = repo.findById(savedPerson.getId()).get();
 
         savedPerson.setSalary(new BigDecimal("73000.28"));
         repo.update(savedPerson);
 
-        Person p2 = repo.findPersonById(savedPerson.getId()).get();
+        Person p2 = repo.findById(savedPerson.getId()).get();
 
         assertThat(p2.getSalary()).isNotEqualTo(p1.getSalary());
     }

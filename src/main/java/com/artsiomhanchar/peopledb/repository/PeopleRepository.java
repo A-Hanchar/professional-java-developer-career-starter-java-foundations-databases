@@ -34,24 +34,20 @@ public class PeopleRepository extends GRUDRepository<Person> {
         ps.setTimestamp(3, convertDobToTimestamp(entity.getDob()));
     }
 
-    public Optional<Person> findPersonById(Long id) {
-        Person person = null;
+    @Override
+    protected String getFindByIdSQL() {
+        return FIND_BY_ID_SQL;
+    }
 
-        try {
-            PreparedStatement ps = connection.prepareStatement(FIND_BY_ID_SQL);
+    @Override
+    Person extractEntityFromResultSet(ResultSet rs) throws SQLException {
+        long personId = rs.getLong("ID");
+        String firstName = rs.getString("FIRST_NAME");
+        String lastName = rs.getString("LAST_NAME");
+        ZonedDateTime dob = ZonedDateTime.of(rs.getTimestamp("DOB").toLocalDateTime(), ZoneId.of("+0"));
+        BigDecimal salary = rs.getBigDecimal("SALARY");
 
-            ps.setLong(1, id);
-
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                person = extractPersonFromResultSet(rs);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-        return Optional.ofNullable(person);
+        return new Person(personId, firstName, lastName, dob, salary);
     }
 
     public List<Person> findAllPersons() {
@@ -62,7 +58,7 @@ public class PeopleRepository extends GRUDRepository<Person> {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                people.add(extractPersonFromResultSet(rs));
+                people.add(extractEntityFromResultSet(rs));
             }
 
         } catch (SQLException e) {
@@ -70,16 +66,6 @@ public class PeopleRepository extends GRUDRepository<Person> {
         }
 
         return people;
-    }
-
-    private Person extractPersonFromResultSet(ResultSet rs) throws SQLException {
-        long personId = rs.getLong("ID");
-        String firstName = rs.getString("FIRST_NAME");
-        String lastName = rs.getString("LAST_NAME");
-        ZonedDateTime dob = ZonedDateTime.of(rs.getTimestamp("DOB").toLocalDateTime(), ZoneId.of("+0"));
-        BigDecimal salary = rs.getBigDecimal("SALARY");
-
-        return new Person(personId, firstName, lastName, dob, salary);
     }
 
     public long count() {
