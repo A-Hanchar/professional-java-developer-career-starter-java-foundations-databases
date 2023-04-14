@@ -1,5 +1,6 @@
 package com.artsiomhanchar.peopledb.repository;
 
+import com.artsiomhanchar.peopledb.annotation.SQL;
 import com.artsiomhanchar.peopledb.model.Person;
 
 import java.math.BigDecimal;
@@ -18,11 +19,6 @@ public class PeopleRepository extends GRUDRepository<Person> {
 
     public PeopleRepository(Connection connection) {
         super(connection);
-    }
-
-    @Override
-    String getSaveSQL() {
-        return SAVE_PERSON_SQL;
     }
 
     @Override
@@ -51,11 +47,7 @@ public class PeopleRepository extends GRUDRepository<Person> {
     }
 
     @Override
-    protected String getUpdateSQL() {
-        return UPDATE_SQL;
-    }
-
-    @Override
+    @SQL(SAVE_PERSON_SQL)
     void mapForSave(Person person, PreparedStatement ps) throws SQLException {
         ps.setString(1, person.getFirstName());
         ps.setString(2, person.getLastName());
@@ -63,6 +55,7 @@ public class PeopleRepository extends GRUDRepository<Person> {
     }
 
     @Override
+    @SQL(UPDATE_SQL)
     void mapForUpdate(Person person, PreparedStatement ps) throws SQLException {
         ps.setString(1, person.getFirstName());
         ps.setString(2, person.getLastName());

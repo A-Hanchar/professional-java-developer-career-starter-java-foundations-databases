@@ -1,5 +1,6 @@
 package com.artsiomhanchar.peopledb.repository;
 
+import com.artsiomhanchar.peopledb.annotation.SQL;
 import com.artsiomhanchar.peopledb.exeption.UnableToSaveException;
 import com.artsiomhanchar.peopledb.model.Entity;
 
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 abstract public class GRUDRepository<T extends Entity> {
@@ -18,6 +20,15 @@ abstract public class GRUDRepository<T extends Entity> {
         this.connection = connection;
     }
 
+    private String getSQLByAnnotation(String methodName, Supplier<String> sqlGetter) {
+        return Arrays.stream(this.getClass().getDeclaredMethods())
+                .filter(method -> methodName.equals(method.getName()))
+                .map(method -> method.getAnnotation(SQL.class))
+                .map(SQL::value)
+                .findFirst()
+                .orElseGet(sqlGetter);
+    }
+
     public T save(T entity) throws UnableToSaveException {
 //        String sql = String.format(
 //                "INSERT INTO PEOPLE (FIRST_NAME, LAST_NAME, DOB) VALUES('%s', '%s', '%s')",
@@ -25,7 +36,7 @@ abstract public class GRUDRepository<T extends Entity> {
 //        );
 
         try {
-            PreparedStatement ps = connection.prepareStatement(getSaveSQL(), Statement.RETURN_GENERATED_KEYS);
+            PreparedStatement ps = connection.prepareStatement(getSQLByAnnotation("mapForSave", this::getSaveSQL), Statement.RETURN_GENERATED_KEYS);
 
             mapForSave(entity, ps);
 
@@ -142,7 +153,7 @@ abstract public class GRUDRepository<T extends Entity> {
 
     public void update(T entity) {
         try {
-            PreparedStatement ps = connection.prepareStatement(getUpdateSQL());
+            PreparedStatement ps = connection.prepareStatement(getSQLByAnnotation("mapForUpdate", this::getUpdateSQL));
 
             mapForUpdate(entity, ps);
 
@@ -152,7 +163,9 @@ abstract public class GRUDRepository<T extends Entity> {
         }
     }
 
-    protected abstract String getUpdateSQL();
+    protected String getUpdateSQL() {
+        return "";
+    };
 
     protected abstract String getDeleteSQL();
 
@@ -182,5 +195,7 @@ abstract public class GRUDRepository<T extends Entity> {
 
     abstract void mapForUpdate(T entity, PreparedStatement ps) throws SQLException;
 
-    abstract String getSaveSQL();
+    String getSaveSQL() {
+        return "";
+    };
 }
