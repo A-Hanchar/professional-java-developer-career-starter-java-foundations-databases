@@ -43,7 +43,7 @@ public class PeopleRepository extends GrudRepository<Person> {
             LEFT OUTER JOIN ADDRESSES AS BUSINESS_A ON PARENT.BUSINESS_ADDRESS = BUSINESS_A.ID
             WHERE PARENT.ID = ?
             """;
-    public static final String FIND_ALL_SQL = "SELECT ID, FIRST_NAME, LAST_NAME, DOB, SALARY FROM PEOPLE";
+    public static final String FIND_ALL_SQL = "SELECT ID, FIRST_NAME, LAST_NAME, DOB, SALARY FROM PEOPLE FETCH FIRST 100 ROWS ONLY";
     public static final String SELECT_COUNT_SQL = "SELECT COUNT(*) FROM PEOPLE";
     public static final String DELETE_SQL = "DELETE FROM PEOPLE WHERE ID=?";
     public static final String DELETE_IN_SQL = "DELETE FROM PEOPLE WHERE ID IN (:ids)";
@@ -120,13 +120,13 @@ public class PeopleRepository extends GrudRepository<Person> {
         Person finalParent = null;
 
         do {
-            Person currentParent = extractPerson(rs, "PARENT_");
+            Person currentParent = extractPerson(rs, "PARENT_").get();
 
             if (finalParent == null) {
                 finalParent = currentParent;
             }
 
-            Person child = extractPerson(rs, "CHILD_");
+            Optional<Person> child = extractPerson(rs, "CHILD_");
 
             Address homeAddress = extractAddress(rs, "HOME_A_");
             Address businessAddress = extractAddress(rs, "BUSINESS_A_");
@@ -134,14 +134,19 @@ public class PeopleRepository extends GrudRepository<Person> {
             finalParent.setHomeAddress(homeAddress);
             finalParent.setBusinessAddress(businessAddress);
 
-            finalParent.addChild(child);
+            child.ifPresent(finalParent::addChild);
         } while (rs.next());
 
         return finalParent;
     }
 
-    private Person extractPerson(ResultSet rs, String aliasPrefix) throws SQLException {
-        long personId = getValueByAlias(aliasPrefix + "ID", rs, Long.class);
+    private Optional<Person> extractPerson(ResultSet rs, String aliasPrefix) throws SQLException {
+        Long personId = getValueByAlias(aliasPrefix + "ID", rs, Long.class);
+
+        if (personId == null) {
+            return Optional.empty();
+        }
+
         String firstName = getValueByAlias(aliasPrefix + "FIRST_NAME", rs, String.class);
         String lastName = getValueByAlias(aliasPrefix + "LAST_NAME", rs, String.class);
         ZonedDateTime dob = ZonedDateTime.of(getValueByAlias(aliasPrefix + "DOB", rs, Timestamp.class).toLocalDateTime(), ZoneId.of("+0"));
@@ -149,7 +154,7 @@ public class PeopleRepository extends GrudRepository<Person> {
 
         Person person = new Person(personId, firstName, lastName, dob, salary);
 
-        return person;
+        return Optional.of(person);
     }
 
     private Address extractAddress(ResultSet rs, String aliasPrefix) throws SQLException {
