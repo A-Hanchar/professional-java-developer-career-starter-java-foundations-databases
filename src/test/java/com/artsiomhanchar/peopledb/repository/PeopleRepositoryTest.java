@@ -87,7 +87,7 @@ public class PeopleRepositoryTest {
     }
 
     @Test
-    public void canSavePersonWithChildren() throws SQLException {
+    public void canSavePersonWithChildren() {
         Person john = new Person("John", "Smith", ZonedDateTime.of(1980, 11, 15, 15, 15, 00, 0, ZoneId.of("-6")));
 
         john.addChild(new Person("Johnny", "Smith", ZonedDateTime.of(2010, 1, 1, 1, 0, 0, 0, ZoneId.of("-6"))));
