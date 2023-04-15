@@ -59,6 +59,8 @@ abstract public class GrudRepository<T> {
 
                 setIdByAnnotation(id, entity);
 //                System.out.println(entity);
+
+                postSave(entity, id);
             }
 
 //            System.out.printf("Records affected: %d%n", recordsAffected);
@@ -253,6 +255,8 @@ abstract public class GrudRepository<T> {
     String getSaveSQL() {
         throw new RuntimeException("SQL not defined");
     };
+
+    protected void postSave(T entity, long id) { }
 
     abstract T extractEntityFromResultSet(ResultSet rs) throws SQLException;
 

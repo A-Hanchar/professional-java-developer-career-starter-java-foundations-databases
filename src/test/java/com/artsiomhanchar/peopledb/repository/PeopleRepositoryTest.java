@@ -87,6 +87,25 @@ public class PeopleRepositoryTest {
     }
 
     @Test
+    public void canSavePersonWithChildren() throws SQLException {
+        Person john = new Person("John", "Smith", ZonedDateTime.of(1980, 11, 15, 15, 15, 00, 0, ZoneId.of("-6")));
+
+        john.addChild(new Person("Johnny", "Smith", ZonedDateTime.of(2010, 1, 1, 1, 0, 0, 0, ZoneId.of("-6"))));
+        john.addChild(new Person("Sarah", "Smith", ZonedDateTime.of(2012, 3, 1, 1, 0, 0, 0, ZoneId.of("-6"))));
+        john.addChild(new Person("Jenny", "Smith", ZonedDateTime.of(2014, 5, 1, 1, 0, 0, 0, ZoneId.of("-6"))));
+
+        Person savedPerson = repo.save(john);
+
+        savedPerson
+                .getChildren()
+                .stream()
+                .map(Person::getId)
+                .forEach(id -> assertThat(id).isGreaterThan(0));
+
+//        connection.commit();
+    }
+
+    @Test
     public void canFindPersonById() {
         Person test = new Person("Test", "Johnson", ZonedDateTime.of(2000, 9, 1, 12, 0, 0, 0, ZoneId.of("+0")));
 
@@ -122,6 +141,27 @@ public class PeopleRepositoryTest {
         Person foundPerson = repo.findById(savedPerson.getId()).get();
 
         assertThat(foundPerson.getBusinessAddress().get().state()).isEqualTo("WA");
+    }
+
+    @Test
+    public void canFindPersonByIdWithChildren() {
+        Person john = new Person("John", "Smith", ZonedDateTime.of(1980, 11, 15, 15, 15, 00, 0, ZoneId.of("-6")));
+
+        john.addChild(new Person("Johnny", "Smith", ZonedDateTime.of(2010, 1, 1, 1, 0, 0, 0, ZoneId.of("-6"))));
+        john.addChild(new Person("Sarah", "Smith", ZonedDateTime.of(2012, 3, 1, 1, 0, 0, 0, ZoneId.of("-6"))));
+        john.addChild(new Person("Jenny", "Smith", ZonedDateTime.of(2014, 5, 1, 1, 0, 0, 0, ZoneId.of("-6"))));
+
+        Person savedPerson = repo.save(john);
+
+        Person foundPerson = repo.findById(savedPerson.getId()).get();
+
+        assertThat(
+                foundPerson
+                        .getChildren()
+                        .stream()
+                        .map(Person::getFirstName)
+                        .collect(Collectors.toSet())
+        ).contains("Johnny", "Sarah", "Jenny");
     }
 
     @Test
@@ -230,7 +270,7 @@ public class PeopleRepositoryTest {
         Files
                 .lines(Path.of("C:\\Users\\ahanchar\\Desktop\\java\\Hr5m\\Hr5m.csv"))
                 .skip(1)
-                .limit(100)
+//                .limit(100)
                 .map(line -> line.split(","))
                 .map(array -> {
                     LocalDate dob = LocalDate.parse(array[10], DateTimeFormatter.ofPattern("M/d/yyyy"));
