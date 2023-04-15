@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.sql.*;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Optional;
 
 public class PeopleRepository extends GrudRepository<Person> {
     private AddressRepository addressRepository = null;
@@ -18,7 +19,7 @@ public class PeopleRepository extends GrudRepository<Person> {
             (FIRST_NAME, LAST_NAME, DOB, SALARY, EMAIL, HOME_ADDRESS) 
             VALUES(?, ?, ?, ?, ?, ?)
             """;
-    public static final String FIND_BY_ID_SQL = "SELECT ID, FIRST_NAME, LAST_NAME, DOB, SALARY FROM PEOPLE WHERE ID=?";
+    public static final String FIND_BY_ID_SQL = "SELECT ID, FIRST_NAME, LAST_NAME, DOB, SALARY, HOME_ADDRESS FROM PEOPLE WHERE ID=?";
     public static final String FIND_ALL_SQL = "SELECT ID, FIRST_NAME, LAST_NAME, DOB, SALARY FROM PEOPLE";
     public static final String SELECT_COUNT_SQL = "SELECT COUNT(*) FROM PEOPLE";
     public static final String DELETE_SQL = "DELETE FROM PEOPLE WHERE ID=?";
@@ -73,7 +74,13 @@ public class PeopleRepository extends GrudRepository<Person> {
         ZonedDateTime dob = ZonedDateTime.of(rs.getTimestamp("DOB").toLocalDateTime(), ZoneId.of("+0"));
         BigDecimal salary = rs.getBigDecimal("SALARY");
 
-        return new Person(personId, firstName, lastName, dob, salary);
+        long homeAddressId = rs.getLong("HOME_ADDRESS");
+        Optional<Address> homeAddress = addressRepository.findById(homeAddressId);
+
+        Person person = new Person(personId, firstName, lastName, dob, salary);
+        person.setHomeAddress(homeAddress.orElse(null));
+
+        return person;
     }
 
     private static Timestamp convertDobToTimestamp(ZonedDateTime dob) {
