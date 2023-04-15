@@ -70,7 +70,6 @@ public class PeopleRepositoryTest {
         Address address = new Address(null, "123 Beale St.", "Apt. 1A", "Wala Wala", "WA", "90210", "United States", "Fulton County", Region.WEST);
 
         john.setHomeAddress(address);
-
         Person savedPerson = repo.save(john);
 
         assertThat(savedPerson.getHomeAddress().id()).isGreaterThan(0);
