@@ -10,6 +10,8 @@ import java.math.BigDecimal;
 import java.sql.*;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -53,6 +55,8 @@ public class PeopleRepository extends GrudRepository<Person> {
     public static final String DELETE_SQL = "DELETE FROM PEOPLE WHERE ID=?";
     public static final String DELETE_IN_SQL = "DELETE FROM PEOPLE WHERE ID IN (:ids)";
     public static final String UPDATE_SQL = "UPDATE PEOPLE SET FIRST_NAME=?, LAST_NAME=?, DOB=?, SALARY=? WHERE ID=?";
+
+    private Map<String, Integer> aliasColumnIndexMap = new HashMap<>();
 
     public PeopleRepository(Connection connection) {
         super(connection);
@@ -191,16 +195,28 @@ public class PeopleRepository extends GrudRepository<Person> {
     private <T> T getValueByAlias(String alias, ResultSet rs, Class<T> clazz) throws SQLException {
         int columnCount = rs.getMetaData().getColumnCount();
 
-        // Params:
-        //columnIndex – the first column is 1, the second is 2, ...
-        for (int colIdx = 1; colIdx <= columnCount; colIdx++) {
-            if (alias.equals(rs.getMetaData().getColumnLabel(colIdx))) {
-                return (T) rs.getObject(alias);
+        int foundIdx = getIndexforAlias(alias, rs, columnCount);
+        return foundIdx != 0 ? (T) rs.getObject(foundIdx) : null;
+//        throw new SQLException(String.format("Column not found for alias: '%s'%n", alias));
+    }
+
+    private int getIndexforAlias(String alias, ResultSet rs, int columnCount) throws SQLException {
+        Integer foundIndex = aliasColumnIndexMap.getOrDefault(alias, 0);
+
+        if (foundIndex == 0) {
+            // Params:
+            //columnIndex – the first column is 1, the second is 2, ...
+            for (int colIdx = 1; colIdx <= columnCount; colIdx++) {
+                if (alias.equals(rs.getMetaData().getColumnLabel(colIdx))) {
+                    foundIndex = colIdx;
+                    aliasColumnIndexMap.put(alias, foundIndex);
+
+                    break;
+                }
             }
         }
 
-        return null;
-//        throw new SQLException(String.format("Column not found for alias: '%s'%n", alias));
+        return foundIndex;
     }
 
     private static Timestamp convertDobToTimestamp(ZonedDateTime dob) {
