@@ -96,7 +96,14 @@ abstract public class GrudRepository<T> {
         List<T> entities = new ArrayList<>();
 
         try {
-            PreparedStatement ps = connection.prepareStatement(getSQLByAnnotation(CrudOperation.FIND_ALL, this::getFindAllSQL));
+            PreparedStatement ps = connection.prepareStatement(
+                    getSQLByAnnotation(
+                            CrudOperation.FIND_ALL,
+                            this::getFindAllSQL
+                    ),
+                    ResultSet.TYPE_SCROLL_INSENSITIVE,
+                    ResultSet.CONCUR_READ_ONLY
+            );
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {

@@ -43,7 +43,12 @@ public class PeopleRepository extends GrudRepository<Person> {
             LEFT OUTER JOIN ADDRESSES AS BUSINESS_A ON PARENT.BUSINESS_ADDRESS = BUSINESS_A.ID
             WHERE PARENT.ID = ?
             """;
-    public static final String FIND_ALL_SQL = "SELECT ID, FIRST_NAME, LAST_NAME, DOB, SALARY FROM PEOPLE FETCH FIRST 100 ROWS ONLY";
+    public static final String FIND_ALL_SQL = """
+            SELECT 
+            PARENT.ID AS PARENT_ID, PARENT.FIRST_NAME AS PARENT_FIRST_NAME, PARENT.LAST_NAME AS PARENT_LAST_NAME, PARENT.DOB AS PARENT_DOB, PARENT.SALARY AS PARENT_SALARY, PARENT.EMAIL AS PARENT_EMAIL 
+            FROM PEOPLE AS PARENT
+            FETCH FIRST 100 ROWS ONLY
+            """;
     public static final String SELECT_COUNT_SQL = "SELECT COUNT(*) FROM PEOPLE";
     public static final String DELETE_SQL = "DELETE FROM PEOPLE WHERE ID=?";
     public static final String DELETE_IN_SQL = "DELETE FROM PEOPLE WHERE ID IN (:ids)";
@@ -126,6 +131,11 @@ public class PeopleRepository extends GrudRepository<Person> {
                 finalParent = currentParent;
             }
 
+            if (!finalParent.equals(currentParent)) {
+                rs.previous();
+                break;
+            }
+
             Optional<Person> child = extractPerson(rs, "CHILD_");
 
             Address homeAddress = extractAddress(rs, "HOME_A_");
@@ -181,15 +191,16 @@ public class PeopleRepository extends GrudRepository<Person> {
     private <T> T getValueByAlias(String alias, ResultSet rs, Class<T> clazz) throws SQLException {
         int columnCount = rs.getMetaData().getColumnCount();
 
-//        Params:
-//columnIndex – the first column is 1, the second is 2, ...
+        // Params:
+        //columnIndex – the first column is 1, the second is 2, ...
         for (int colIdx = 1; colIdx <= columnCount; colIdx++) {
             if (alias.equals(rs.getMetaData().getColumnLabel(colIdx))) {
                 return (T) rs.getObject(alias);
             }
         }
 
-        throw new SQLException(String.format("Column not found for alias: '%s'%n", alias));
+        return null;
+//        throw new SQLException(String.format("Column not found for alias: '%s'%n", alias));
     }
 
     private static Timestamp convertDobToTimestamp(ZonedDateTime dob) {
