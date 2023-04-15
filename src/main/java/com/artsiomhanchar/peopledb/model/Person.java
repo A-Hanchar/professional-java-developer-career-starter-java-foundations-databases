@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Objects;
+import java.util.Optional;
 
 public class Person implements Entity {
     @Id
@@ -16,7 +17,7 @@ public class Person implements Entity {
     private ZonedDateTime dob;
     private BigDecimal salary = new BigDecimal("0");
     private String email;
-    private Address homeAddress;
+    private Optional<Address> homeAddress = Optional.empty();
 
     public Person(Long id, String firstName, String lastName, ZonedDateTime dob) {
         this(firstName, lastName, dob);
@@ -111,10 +112,10 @@ public class Person implements Entity {
     }
 
     public void setHomeAddress(Address homeAddress) {
-        this.homeAddress = homeAddress;
+        this.homeAddress = Optional.ofNullable(homeAddress);
     }
 
-    public Address getHomeAddress() {
+    public Optional<Address> getHomeAddress() {
         return homeAddress;
     }
 }

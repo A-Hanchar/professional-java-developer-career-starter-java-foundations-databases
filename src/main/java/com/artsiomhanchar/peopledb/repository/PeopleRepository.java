@@ -34,14 +34,20 @@ public class PeopleRepository extends GrudRepository<Person> {
     @Override
     @SQL(value = SAVE_PERSON_SQL, operationType = CrudOperation.SAVE)
     void mapForSave(Person person, PreparedStatement ps) throws SQLException {
-        Address savedAddress = addressRepository.save(person.getHomeAddress());
+        Address savedAddress = null;
 
         ps.setString(1, person.getFirstName());
         ps.setString(2, person.getLastName());
         ps.setTimestamp(3, convertDobToTimestamp(person.getDob()));
         ps.setBigDecimal(4, person.getSalary());
         ps.setString(5, person.getEmail());
-        ps.setLong(6, savedAddress.id());
+
+        if (person.getHomeAddress().isPresent()) {
+            savedAddress = addressRepository.save(person.getHomeAddress().get());
+            ps.setLong(6, savedAddress.id());
+        } else {
+            ps.setObject(6, null);
+        }
     }
 
     @Override
