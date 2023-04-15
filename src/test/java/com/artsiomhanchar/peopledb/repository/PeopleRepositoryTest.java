@@ -31,7 +31,7 @@ public class PeopleRepositoryTest {
 
     @BeforeEach
     void setUp() throws SQLException {
-        connection = DriverManager.getConnection("jdbc:h2:C:\\Users\\ahanchar\\Desktop\\java\\databases\\peopledb".replace("~", System.getProperty("user.home")));
+        connection = DriverManager.getConnection("jdbc:h2:C:\\Users\\ahanchar\\Desktop\\java\\databases\\peopledb;TRACE_LEVEL_SYSTEM_OUT=0".replace("~", System.getProperty("user.home")));
         connection.setAutoCommit(false);
 
         repo = new PeopleRepository(connection);

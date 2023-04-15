@@ -23,7 +23,7 @@ public class PeopleRepository extends GrudRepository<Person> {
     public static final String FIND_BY_ID_SQL = """
             SELECT 
             P.ID, P.FIRST_NAME, P.LAST_NAME, P.DOB, P.SALARY, P.HOME_ADDRESS,
-            A.ID, A.STREET_ADDRESS, A.ADDRESS2, A.CITY, A.STATE, A.POSTCODE, A.COUNTY, A.REGION, A.COUNTRY
+            A.ID AS A_ID, A.STREET_ADDRESS, A.ADDRESS2, A.CITY, A.STATE, A.POSTCODE, A.COUNTY, A.REGION, A.COUNTRY
             FROM PEOPLE AS P 
             LEFT OUTER JOIN ADDRESSES AS A ON P.HOME_ADDRESS = A.ID
             WHERE P.ID=?
@@ -91,7 +91,12 @@ public class PeopleRepository extends GrudRepository<Person> {
     }
 
     private Address extractAddress(ResultSet rs) throws SQLException {
-        long addressId = rs.getLong("ID");
+        Long addressId = getValueByAlias("A_ID", rs, Long.class);
+
+        if (addressId == null) {
+            return null;
+        }
+
         String streetAddress = rs.getString("STREET_ADDRESS");
         String address2 = rs.getString("ADDRESS2");
         String city = rs.getString("CITY");
@@ -104,6 +109,20 @@ public class PeopleRepository extends GrudRepository<Person> {
         Address address = new Address(addressId, streetAddress, address2, city, state, postcode, country, county, region);
 
         return address;
+    }
+
+    private <T> T getValueByAlias(String alias, ResultSet rs, Class<T> clazz) throws SQLException {
+        int columnCount = rs.getMetaData().getColumnCount();
+
+//        Params:
+//columnIndex – the first column is 1, the second is 2, ...
+        for (int colIdx = 1; colIdx <= columnCount; colIdx++) {
+            if (alias.equals(rs.getMetaData().getColumnLabel(colIdx))) {
+                return (T) rs.getObject(alias);
+            }
+        }
+
+        throw new SQLException(String.format("Column not found for alias: '%s'%n", alias));
     }
 
     private static Timestamp convertDobToTimestamp(ZonedDateTime dob) {
